@@ -7,7 +7,7 @@ from dqn import Agent
 from utils import plot_learning_curve
 
 if __name__ == '__main__':
-    env = gym.make("CartPole-v1", render_mode="rgb_array")
+    env = gym.make("CartPole-v1", render_mode="human")
     agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, n_actions=2,
                   eps_min=0.01, input_dims=[4], lr=0.001)
     scores, eps_history = [], []
@@ -18,6 +18,7 @@ if __name__ == '__main__':
         score = 0
         done = False
         observation, _ = env.reset()
+        env.render()
         while not done:
             action = agent.choose_action(observation)
             new_observation, reward, terminated, truncated, info = env.step(action)
