@@ -8,4 +8,4 @@ You will need the following dependencies for this repo:
 You will also need to install the classic-control package like so:
 ```pip install gymnasium[classic-control]```
 
-To run, use the following command: `python main.py`.
+To run, you can use the following commands: `python mountain_car.py` or `python cart_pole.py`.

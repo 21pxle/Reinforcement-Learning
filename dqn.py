@@ -1,3 +1,5 @@
+from typing import Callable
+
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
@@ -56,12 +58,14 @@ class Agent:
     # Epsilon = explore/exploit (0 <= epsilon <= 1)
     # Epsilon_min = minimum value of epsilon
     # Eps_dis = multiplicative (linear dependence, inverse sqrt, whatever, as long as it's a decreasing function)
-    def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, max_mem_size=100000, eps_min=0.01,
-                 eps_dis=5e-4):
+    def __init__(self, input_dims: list[int],
+                 n_actions: int, eps_fn: Callable[[float], float], lr: float = 0.001,
+                 batch_size: int = 64, epsilon: float = 1, gamma: float = 0.99,
+                 max_mem_size: int = 100000, eps_min: float = 0.01):
         self.gamma = gamma
         self.epsilon = epsilon
         self.eps_min = eps_min
-        self.eps_dis = eps_dis
+        self.eps_fn = eps_fn
         self.lr = lr
         self.action_space = list(range(n_actions))
         self.mem_size = max_mem_size
@@ -80,7 +84,7 @@ class Agent:
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
 
         # Terminal states: the game is done, future value is 0.
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
 
     def store_transition(self, state, action, reward, new_state, done):
         index = self.mem_cntr % self.mem_size
@@ -141,5 +145,5 @@ class Agent:
         loss.backward()
         self.Q_eval.optimizer.step()
 
-        new_epsilon = self.epsilon * (1 - self.eps_dis)
-        self.epsilon = new_epsilon if new_epsilon > self.eps_min else self.eps_min
+        # Use the larger of min_epsilon and eps_fn(epsilon).
+        self.epsilon = max(self.eps_min, self.eps_fn(self.epsilon))
